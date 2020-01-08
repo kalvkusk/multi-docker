@@ -1,0 +1,22 @@
+language: generic
+sudo: required
+service:
+  - docker
+before_install:
+  - docker build -t kalvkusk/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run  CI=true kalvkusk/react-test npm test
+
+after_success:
+  - docker build -t kalvkusk/multi-client ./client
+  - docker build -t kalvkusk/multi-nginx ./nginx
+  - docker build -t kalvkusk/multi-server ./server
+  - docker build -t kalvkusk/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push kalvkusk/multi-client
+  - docker push kalvkusk/multi-nginx
+  - docker push kalvkusk/multi-server
+  - docker push kalvkusk/multi-worker
